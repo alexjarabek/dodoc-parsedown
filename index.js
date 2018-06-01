@@ -1,6 +1,7 @@
+var os = require('os');
 
 module.exports.parse = function(text) {
-	var pieces = text.split(/\n/),
+	var pieces = text.split(os.EOL),
 		results = {},
 		lastKey = null;
 		subfieldMode = false;
@@ -9,8 +10,8 @@ module.exports.parse = function(text) {
 	for (var i = 0; i < pieces.length; i++) {
 		var piece = pieces[i] || '';
 		if (piece == '----') {
-			// remove last \n since a divider is made of \n---\n
-			if( results[lastKey] !== undefined && typeof results[lastKey] === 'string' && results[lastKey].substring(results[lastKey].length-1) === '\n')
+			// remove last os.EOL since a divider is made of os.EOL---os.EOL
+			if( results[lastKey] !== undefined && typeof results[lastKey] === 'string' && results[lastKey].substring(results[lastKey].length-1) === 'os.EOL')
 				results[lastKey] = results[lastKey].slice(0, -1);
 			lastKey = null;
 			subfieldMode = false;
@@ -48,7 +49,7 @@ module.exports.parse = function(text) {
 			} else if(subfieldMode) {
 				results[lastKey][subfieldIndex][subfieldKey] += piece;
 			} else {
-				results[lastKey] += (results[lastKey].length ? '\n' : '') + piece;
+				results[lastKey] += (results[lastKey].length ? os.EOL : '') + piece;
 			}
 
 		}
@@ -68,26 +69,26 @@ module.exports.textify = function(obj) {
 		}
 
 		// check if value contains a delimiter
-		if( typeof value === 'string' && value.indexOf('\n----\n') >= 0) {
+		if( typeof value === 'string' && value.indexOf(os.EOL + '----' + os.EOL) >= 0) {
 			// prepend with a space to neutralize it
-			value = value.replace('\n----\n', '\n ----\n');
+			value = value.replace(os.EOL + '----' + os.EOL, os.EOL + ' ----' + os.EOL);
 		}
 
 		if( typeof value === 'object') {
 			// loop for each item in object
-			var objstr = '\n\n';
+			var objstr = os.EOL + os.EOL;
 
 			for (var index in value) {
 				var thisItem = value[index];
-				objstr += '-\n';
+				objstr += '-' + os.EOL;
 				// loop for each prop for each object
 				for (var itemProp in thisItem) {
-					objstr += itemProp + ': ' + thisItem[itemProp] + '\n';
+					objstr += itemProp + ': ' + thisItem[itemProp] + os.EOL;
 				}
 			}
 			value = objstr;
 		}
-		str += prop + ': ' + value + "\n\n----\n\n";
+		str += prop + ': ' + value + os.EOL + os.EOL + "----" + os.EOL + os.EOL;
 	}
 	return str;
 }

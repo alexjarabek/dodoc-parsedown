@@ -5,7 +5,7 @@ var chai = require('chai'),
 	path = require('path'),
 	request = require('superagent');
 
-var parsedown = require('../index');
+var parsedown = require('../index').parse;
 
 function parseFile(file) {
 	var text =  fs.readFileSync(file);

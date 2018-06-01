@@ -6,9 +6,9 @@
   "author": "Louis Eveillard",
   "license": "MIT",
   "devDependencies": {
-	  "chai": "*",
-	  "mocha": "*",
-	  "superagent": "*"
+    "chai": "*",
+    "mocha": "*",
+    "superagent": "*"
   },
   "repository": {
     "type": "git",
