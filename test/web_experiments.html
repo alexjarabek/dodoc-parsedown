@@ -1,0 +1,161 @@
+
+<body>
+  <style>
+    body {
+      margin: 0;
+    }
+    div {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      width: 100%;
+    }
+    div > * {
+      border: 2px solid rebeccapurple;
+      padding: 20px;      
+    }
+
+    pre {
+      margin: 0;
+    }
+  </style>
+  <div>
+  </div>
+
+</body>
+
+<script>
+const parse = function(text) {
+  var pieces = text.split(/\n/),
+    results = {},
+    lastKey = null;
+  subfieldMode = false;
+  subfieldIndex = -1;
+  subfieldKey = null;
+  for (var i = 0; i < pieces.length; i++) {
+    var piece = pieces[i] || '';
+    if (piece == '----') {
+      // remove last \n since a divider is made of \n---\n
+      if (
+        results[lastKey] !== undefined &&
+        typeof results[lastKey] === 'string' &&
+        results[lastKey].substring(results[lastKey].length - 1) === '\n'
+      )
+        results[lastKey] = results[lastKey].slice(0, -1);
+      lastKey = null;
+      subfieldMode = false;
+      subfieldIndex = -1;
+      subfieldKey = null;
+      continue;
+    }
+    var matches = piece.match(/(^[a-zA-Z0-9_]+)\:(?:[\s\n])*(.+|$)$/m);
+
+    // if found a new matching line with "fieldname: anything"
+    if (matches && matches.length == 3) {
+      // if we are currently adding to a subfield, let's add this
+      if (subfieldMode) {
+        subfieldKey = matches[1];
+        results[lastKey][subfieldIndex][subfieldKey] = matches[2];
+      } else {
+        lastKey = matches[1];
+        results[lastKey] = matches[2];
+      }
+    } else {
+      if (!lastKey) {
+        lastKey = 'content';
+        if (!results.content) results.content = '';
+      }
+      if (piece === '-') {
+        // seems we are facing a subfield
+        subfieldMode = true;
+        subfieldIndex++;
+        if (typeof results[lastKey] !== 'object')
+          results[lastKey] = new Array();
+        results[lastKey][subfieldIndex] = new Object();
+      } else if (subfieldMode) {
+        results[lastKey][subfieldIndex][subfieldKey] += piece;
+      } else {
+        results[lastKey] += (results[lastKey].length ? '\n' : '') + piece;
+      }
+    }
+  }
+  return results;
+};
+
+const parse2 = function(text) {
+  var pieces = text.split(/\n/),
+    results = {},
+    lastKey = null;
+  subfieldMode = false;
+  subfieldIndex = -1;
+  subfieldKey = null;
+
+  for (var i = 0; i < pieces.length; i++) {
+    var piece = pieces[i] || '';
+    if (piece == '----') {
+      // remove last \n since a divider is made of \n----\n
+      if (
+        results[lastKey] !== undefined &&
+        typeof results[lastKey] === 'string' &&
+        results[lastKey].substring(results[lastKey].length - 1) === '\n'
+      ) {
+        results[lastKey] = results[lastKey].slice(0, -1);
+      }
+      lastKey = null;
+      subfieldMode = false;
+      subfieldIndex = -1;
+      subfieldKey = null;
+      continue;
+    }
+    var matches = piece.match(/(^[a-zA-Z0-9_]+)\:(?:[\s\n])*(.+|$)$/m);
+
+    // if found a new matching line with "fieldname: anything"
+    if (matches && matches.length == 3 && subfieldMode) {
+      // if we are currently adding to a subfield, let's add this
+      subfieldKey = matches[1];
+      results[lastKey][subfieldIndex][subfieldKey] = matches[2];
+    } else if(matches && matches.length == 3 && lastKey === null) {
+      lastKey = matches[1];
+      results[lastKey] = matches[2];
+    } else {
+      if (!lastKey && piece.trim() !== '') {
+        lastKey = 'content';
+        if (!results.content) results.content = '';
+      }
+      if (piece === '-') {
+        // seems we are facing a subfield
+        subfieldMode = true;
+        subfieldIndex++;
+        if (typeof results[lastKey] !== 'object')
+          results[lastKey] = new Array();
+        results[lastKey][subfieldIndex] = new Object();
+      } else if (subfieldMode) {
+        results[lastKey][subfieldIndex][subfieldKey] += piece;
+      } else if (lastKey !== null) {
+        results[lastKey] += (results[lastKey].length ? '\n' : '') + piece;
+      }
+    }
+  }
+  return results;
+};
+
+var to_parse = [
+  'test:test test',
+  '----\n',
+  'test test',
+  ' test:test',
+  'test:test test\n',
+  'first: value1\n\n----\n\nsecond:value2',
+  'name: première publi\n\n----\n\ninformations: Mes informations\n\n----\n\nmedias:\n\n-\nname: 02-animations/20160920_171027.txt\n-\nname: 02-animations/20160920_171029.txt\nlargeur: 100%\n-\nname: 02-animations/20160920_171027.txt\n\n----\n\n',
+  'test:hello\nworld: bis',
+  'name: Hello world\n\n----\n\ncreated: 20160522_232028\n\n----\n\nmodified: 20160522_232028\n\n----\n\nstatut: en cours\n\n----'
+]
+
+to_parse.map(t => {
+  [t,  JSON.stringify(parse(t), null, 4), JSON.stringify(parse2(t), null, 4)].map(t => {
+    var para = document.createElement("pre");
+    var node = document.createTextNode(t);
+    para.appendChild(node);  
+    document.getElementsByTagName('div')[0].appendChild(para);
+  });
+})
+
+</script>
