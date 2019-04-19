@@ -1,14 +1,14 @@
 {
   "name": "dodoc-parsedown",
   "description": "Dodoc Parsedown",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "author": "Louis Eveillard",
   "license": "MIT",
   "devDependencies": {
-	  "chai": "*",
-	  "mocha": "*",
-	  "superagent": "*"
+    "chai": "*",
+    "mocha": "*",
+    "superagent": "*"
   },
   "repository": {
     "type": "git",
