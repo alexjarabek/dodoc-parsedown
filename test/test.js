@@ -83,13 +83,13 @@ describe('Properties', function() {
   });
 
   it('should swallow line breaks after ---- dividers', function() {
-    var param = parsedown('----\n');
-    expect(param.content).to.equal('');
+    var param = parsedown('----\nAh');
+    expect(param.content).to.equal('Ah');
   });
 
   it('should swallow multiple line breaks after ---- dividers', function() {
-    var param = parsedown('----\n\n');
-    expect(param.content).to.equal('');
+    var param = parsedown('----\n\nAh');
+    expect(param.content).to.equal('Ah');
   });
 
   it('should swallow line breaks directly after a property name', function() {
@@ -151,5 +151,10 @@ describe('Properties', function() {
     expect(param.medias[0].name).to.equal('02-animations/20160920_171027.txt');
     expect(param.medias[1].name).to.equal('02-animations/20160920_171029.txt');
     expect(param.medias[1].largeur).to.equal('100%');
+  });
+
+  it('With colons after a prop has already been set', function() {
+    var param = parsedown('test: hello\nworld: bis');
+    expect(param.test).to.equal('hello\nworld: bis');
   });
 });
