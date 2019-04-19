@@ -1,7 +1,7 @@
 {
   "name": "dodoc-parsedown",
   "description": "Dodoc Parsedown",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "main": "index.js",
   "author": "Louis Eveillard",
   "license": "MIT",

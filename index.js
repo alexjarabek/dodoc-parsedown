@@ -1,54 +1,70 @@
+String.prototype.trimStart = String.prototype.trimStart
+  ? String.prototype.trimStart
+  : function() {
+      if (String.prototype.trimLeft) {
+        return this.trimLeft();
+      } else if (String.prototype.trim) {
+        var trimmed = this.trim();
+        var indexOfWord = this.indexOf(trimmed);
+
+        return this.slice(indexOfWord, this.length);
+      }
+    };
+
 module.exports.parse = function(text) {
-  var pieces = text.split(/\n/),
-    results = {},
-    lastKey = null;
-  subfieldMode = false;
-  subfieldIndex = -1;
-  subfieldKey = null;
+  var pieces = text.split('\n\n----\n\n');
+  var results = {};
+
+  // find property by looking for the first colon
   for (var i = 0; i < pieces.length; i++) {
     var piece = pieces[i] || '';
-    if (piece == '----') {
-      // remove last \n since a divider is made of \n---\n
-      if (
-        results[lastKey] !== undefined &&
-        typeof results[lastKey] === 'string' &&
-        results[lastKey].substring(results[lastKey].length - 1) === '\n'
-      )
-        results[lastKey] = results[lastKey].slice(0, -1);
-      lastKey = null;
-      subfieldMode = false;
-      subfieldIndex = -1;
-      subfieldKey = null;
-      continue;
-    }
-    var matches = piece.match(/(^[a-zA-Z0-9_]+)\:(?:[\s\n])*(.+|$)$/m);
+    if (piece.indexOf(':') > 0) {
+      const first_colon_position = piece.indexOf(':');
+      let prop = piece.substring(0, first_colon_position);
+      prop = prop.trim();
 
-    // if found a new matching line with "fieldname: anything"
-    if (matches && matches.length == 3) {
-      // if we are currently adding to a subfield, let's add this
-      if (subfieldMode) {
-        subfieldKey = matches[1];
-        results[lastKey][subfieldIndex][subfieldKey] = matches[2];
+      let value = piece.substring(first_colon_position + 1);
+
+      if (value.startsWith('\n\n-\n')) {
+        let subvalues = value.split('\n-\n');
+
+        subvalues = subvalues.reduce((acc, sv) => {
+          let pieces = sv.split(/\n/);
+          let results = {};
+
+          for (var i = 0; i < pieces.length; i++) {
+            var piece = pieces[i] || '';
+            if (piece.trim() !== '' && piece.indexOf(':') > 0) {
+              let first_colon_position = piece.indexOf(':');
+
+              let sub_prop = piece.substring(0, first_colon_position);
+              sub_prop = sub_prop.trim();
+
+              let sub_value = piece.substring(first_colon_position + 1);
+              sub_value = sub_value.trim();
+
+              results[sub_prop] = sub_value;
+            }
+          }
+
+          if (Object.keys(results).length > 0) {
+            acc.push(results);
+          }
+
+          return acc;
+        }, []);
+
+        results[prop] = subvalues;
       } else {
-        lastKey = matches[1];
-        results[lastKey] = matches[2];
+        value = value.trimStart();
+        // if(value.endsWith('\n')) {
+        //   value = value.slice(0, -1);
+        // }
+        results[prop] = value;
       }
     } else {
-      if (!lastKey) {
-        lastKey = 'content';
-        if (!results.content) results.content = '';
-      }
-      if (piece === '-') {
-        // seems we are facing a subfield
-        subfieldMode = true;
-        subfieldIndex++;
-        if (typeof results[lastKey] !== 'object')
-          results[lastKey] = new Array();
-        results[lastKey][subfieldIndex] = new Object();
-      } else if (subfieldMode) {
-        results[lastKey][subfieldIndex][subfieldKey] += piece;
-      } else {
-        results[lastKey] += (results[lastKey].length ? '\n' : '') + piece;
+      if (!!piece.trim()) {
+        results['content'] = piece;
       }
     }
   }
